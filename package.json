@@ -1,0 +1,19 @@
+{
+  "name": "sus-jwt-node-api",
+  "version": "1.0.0",
+  "description": "node-js web api allowing jwt attacks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radioli/sus-jwt-node-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/radioli/sus-jwt-node-api/issues"
+  },
+  "homepage": "https://github.com/radioli/sus-jwt-node-api#readme"
+}
