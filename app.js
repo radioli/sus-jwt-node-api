@@ -2,12 +2,12 @@ var express = require("express")
 var jwt = require("jsonwebtoken");
 const fs = require("fs")
 var app = express()
-const test_user = { user: "test", password: "test" }
+const test_user = { user: "test", password: "test"}
 app.use(express.json())
 
 // PRIVATE and PUBLIC key
-var privateKEY  = fs.readFileSync('./id_rsa_pub.key', 'utf8');
-var publicKEY  = fs.readFileSync('./id_rsa.key', 'utf8');
+var privateKEY  = fs.readFileSync('./key.pem', 'utf8');
+var publicKEY  = fs.readFileSync('./pubkey.pem', 'utf8');
 
 app.get('/', (req, res) => {
     res.send("Hello world");
@@ -38,7 +38,7 @@ function generateAccessTokenFromSecret(user) {
     return jwt.sign(user, "some secret no cap", { expiresIn: "15m" })
 }
 function generateAccessTokenFromKey(user) {
-    return jwt.sign(user, privateKEY, { expiresIn: "12h" })
+    return jwt.sign(user, privateKEY, { expiresIn: "12h", algorithm: 'RS256' })
 }
 // refreshTokens
 let refreshTokensFromSecret = []
@@ -70,7 +70,18 @@ function validateTokenHS256(req, res, next) {
             next() //proceed to the next action in the calling function
         }
     }) //end of jwt.verify()
-} 
+}
+function decodeToken(req, res, next) {
+    //get token from request header
+    const authHeader = req.headers["authorization"]
+    const token = authHeader.split(" ")[1]
+    //the request header contains the token "Bearer <token>", split the string and use the second value in the split array.
+    if (token == null) res.sendStatus(400).send("Token not present")
+    var decoded = jwt.decode(token);
+    console.log(decoded)
+    req.user = decoded.user
+    next() //proceed to the next action in the calling function
+    }
 
 function validateTokenRS256(req, res, next) {
     //get token from request header
@@ -78,7 +89,7 @@ function validateTokenRS256(req, res, next) {
     const token = authHeader.split(" ")[1]
     //the request header contains the token "Bearer <token>", split the string and use the second value in the split array.
     if (token == null) res.sendStatus(400).send("Token not present")
-    jwt.verify(token, privateKEY, (err, user) => {
+    jwt.verify(token, publicKEY, (err, user) => {
         if (err) {
             res.status(403).send("Token invalid")
         }
@@ -94,6 +105,23 @@ app.get("/HS256/posts", validateTokenHS256, (req, res) => {
     console.log(req.user.user)
     res.send(`${req.user.user} successfully accessed post hs-256`)
 })
+app.get("/decode/admin", decodeToken, (req, res) => {
+    console.log("Token is valid")
+    if(req.user == "admin"){
+    res.send(`${req.user} successfully accessed hs-256 admin`)
+    }else{
+    res.status(403).send("Token invalid")
+    }
+})
+app.get("/jwt/admin", decodeToken, (req, res) => {
+    console.log("Token is valid")
+    if(req.user == "admin"){
+    res.send(`${req.user} successfully accessed hs-256 admin`)
+    }else{
+    res.status(403).send("Token invalid")
+    }
+})
+
 
 app.get("/RS256/posts", validateTokenRS256, (req, res) => {
     console.log("Token is valid")

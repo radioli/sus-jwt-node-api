@@ -41,7 +41,7 @@ app.get('/jwks', async (req, res) => {
     token = token.toString('base64')
     res.send({ token})
   })
-  app.post('/verify', validateToken, async (req, res) => {
+  app.get('/verify', validateToken, async (req, res) => {
     res.send("essa")
 
   })
@@ -54,6 +54,10 @@ app.get('/jwks', async (req, res) => {
     const publicKey = jwktopem(firstKey)
     console.log(publicKey)
     if (token == null) res.sendStatus(400).send("Token not present")
+    const v = await jose.JWS.createVerify(keyStore).verify(token)
+    console.log('Verify Token')
+    console.log(v.header)
+    console.log(v.payload.toString())
     jwt.verify(token, publicKey, (err, user) => {
         if (err) {
             res.status(403).send("Token invalid")
