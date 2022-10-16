@@ -7,11 +7,11 @@ const axios = require('axios')
 const app = new Express();
 var sqlite3 = require('sqlite3');
 app.use(Express.json())
-let db = new sqlite3.Database('vuln_api.db');
+let db1 = new sqlite3.Database('vuln_api.db');
 let publicKeys = []
-const result = db.get("SELECT pem FROM keys where id = 3");
+const result = db1.get("SELECT pem FROM keys where id = 3");
 console.log(result)
-  db.each("SELECT pem FROM keys where id = 3", function(err, row) {
+  db1.each("SELECT pem FROM keys where id = 3", function(err, row) {
     publicKeys.push(row)
   });
   console.log(publicKeys)
