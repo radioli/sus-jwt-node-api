@@ -23,6 +23,8 @@
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^0.4.0",
     "jwk-to-pem": "^2.0.5",
-    "node-jose": "^0.10.0"
+    "jws": "^2.0.0",
+    "node-jose": "^0.10.0",
+    "sqlite3": "^5.1.2"
   }
 }

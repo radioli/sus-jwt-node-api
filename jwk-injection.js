@@ -29,7 +29,7 @@ app.get('/jwks', async (req, res) => {
     const keyStore = await jose.JWK.asKeyStore(ks.toString())
     const [key] = keyStore.all({ use: 'sig' })
     
-    const opt = { compact: true, jwk: key, fields: { typ: 'jwt' } }
+    const opt = { compact: true, jwk: key, fields: { typ: 'jwt', kid: "q"  } }
     const payload = JSON.stringify({
       exp: Math.floor((Date.now() + 24*60*60*1000) / 1000),
       iat: Math.floor(Date.now() / 1000),
