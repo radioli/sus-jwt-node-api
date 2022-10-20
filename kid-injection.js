@@ -5,7 +5,7 @@ const jose = require('node-jose');
 const jwktopem = require('jwk-to-pem')
 const axios = require('axios')
 const app = new Express();
-var sqlite3 = require('sqlite3');
+var sqlite3 = require('sqlite3').verbose();
 app.use(Express.json())
 let db1 = new sqlite3.Database('vuln_api.db');
 let publicKeys = []
@@ -46,7 +46,12 @@ app.get('/jwks', async (req, res) => {
   app.get('/verify', validateToken, async (req, res) => {
     res.send("atak jako localhost:5002 / admin udany")
   })
-
+  app.get('/data', (req, res)=>{
+    sql = "SELECT pem FROM keys where id = 3";
+    db1.all(sql, [], (err, rows)=>{
+      return res.json({status:200, data:rows, success: true})
+    })
+  })
   async function validateToken(req, res, next) {
     const token = req.body.token
     var decoded = jwt.decode(token);
