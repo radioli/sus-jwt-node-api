@@ -42,12 +42,13 @@ app.get('/jwks', async (req, res) => {
     res.send({ token})
   })
   app.get('/verify', validateToken, async (req, res) => {
-    res.send("essa")
+    res.send("token valid")
 
   })
 
   async function validateToken(req, res, next) {
-    const token = req.body.token
+    const authHeader = req.headers["authorization"]
+    const token = authHeader.split(" ")[1]
     const { data} = await axios.get('http://localhost:5001/jwks')
     const [ firstKey ] = data.keys
     console.log(firstKey)

@@ -50,7 +50,8 @@ http.createServer((req, res) => {
     res.send("atak jako localhost:5002 / admin udany")
   })
   app.get('/admin', validateToken, async (req, res) => {
-    const token = req.body.token
+    const authHeader = req.headers["authorization"]
+    const token = authHeader.split(" ")[1]
     var decoded = JSON.parse(jwt.decode(token));
     if(decoded.sub== 'admin'){
       res.send("atak jako localhost:5002 / admin udany")
@@ -65,7 +66,8 @@ http.createServer((req, res) => {
 //`0 UNION SELECT \'-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDOZ2ZxoEmy0oSkE+XF1Nau+7OM\nw1uHQiasyx6Tvp+SEVjRf+gcIuUdfbVIni1QcrM6jnqBM/HokCH+3/prTc1yKi31\nU41a7bRreb20qYDN7cvGf4UdQsoNbIgfC65OcTPAxHMdGcOTiLRqi4HjpyEPfbv7\nJ0j2DeRQPMOUk6xLDwIDAQAB\n-----END PUBLIC KEY-----\'`
   
   async function validateToken(req, res, next) {
-    const token = req.body.token
+    const authHeader = req.headers["authorization"]
+    const token = authHeader.split(" ")[1]
     var decoded = jwt.decode(token);
     const header = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString())
     console.log(header)
