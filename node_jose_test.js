@@ -15,15 +15,13 @@ const raw = {
 
 async function start() {
   var keystore = JWK.createKeyStore();
-  
 
-  
   if (!fs.existsSync(keystoreFile)) {
     if (!fs.existsSync(certDir)) {
       fs.mkdirSync(certDir)
     }
     console.log('generate keystore')
-    await keystore.generate('RSA', 2048, {alg: 'RS256', use: 'sig'})
+    await keystore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' })
     fs.writeFileSync(keystoreFile, JSON.stringify(keystore.toJSON(true)))
   }
   else {
@@ -39,10 +37,10 @@ async function start() {
   const payload = JSON.stringify(raw)
   const opt = { compact: true, jwk: key, fields: { typ: 'jwt' } }
   const token = await JWS.createSign(opt, key)
-                       .update(payload).final()
+    .update(payload).final()
 
   // Make JWT
-  console.log('JWT')  
+  console.log('JWT')
   console.log(token)
 
   // Verify Token
@@ -53,8 +51,8 @@ async function start() {
 
   // Verify Token with jsonwebtoken
   const publicKey = jwkToPem(key.toJSON())
-  const privateKey = jwkToPem(key.toJSON(true), {private: true})
-  
+  const privateKey = jwkToPem(key.toJSON(true), { private: true })
+
   console.log('public', publicKey)
   console.log('private', privateKey)
 
