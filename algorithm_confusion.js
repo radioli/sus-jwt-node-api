@@ -42,7 +42,6 @@ app.get('/tokens', async (req, res) => {
 
 app.get('/verify', validateToken, async (req, res) => {
   res.send("essa")
-
 })
 
 async function validateToken(req, res, next) {
