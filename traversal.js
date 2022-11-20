@@ -28,7 +28,7 @@ http.createServer((req, res) => {
 }).listen(1338)
 //app.use(mount)
 
-  app.get('/tokens', async (req, res) => {
+  app.get('/token', async (req, res) => {
    // const ks = fs.readFileSync('attacker_keys.json')
     //const keyStore = await jose.JWK.asKeyStore(ks.toString())
     //const [key] = keyStore.all({ use: 'sig' })
@@ -47,20 +47,19 @@ http.createServer((req, res) => {
     res.send({ token})
   })
   app.get('/verify', validateToken, async (req, res) => {
-    res.send("atak jako localhost:5002 / admin udany")
+    res.send("Token valid")
   })
   app.get('/admin', validateToken, async (req, res) => {
     const authHeader = req.headers["authorization"]
     const token = authHeader.split(" ")[1]
     var decoded = JSON.parse(jwt.decode(token));
-    if(decoded.sub== 'admin'){
-      res.send("atak jako localhost:5002 / admin udany")
+    if (decoded.sub== 'admin') {
+      res.send(`Successfully accessed admin endpoint`)
     }
-    else{
-      res.status(403).send("not admin gtfo")
+    else {
+      res.status(403).send("Access Forbidden")
     }
-
-    console.log(decoded)
+  
   })
 
 //`0 UNION SELECT \'-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDOZ2ZxoEmy0oSkE+XF1Nau+7OM\nw1uHQiasyx6Tvp+SEVjRf+gcIuUdfbVIni1QcrM6jnqBM/HokCH+3/prTc1yKi31\nU41a7bRreb20qYDN7cvGf4UdQsoNbIgfC65OcTPAxHMdGcOTiLRqi4HjpyEPfbv7\nJ0j2DeRQPMOUk6xLDwIDAQAB\n-----END PUBLIC KEY-----\'`

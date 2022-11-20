@@ -11,14 +11,14 @@ app.use(Express.json())
 
 let db1 = new sqlite3.Database('vuln_api.db');
 
-app.get('/jwks', async (req, res) => {
+app.get('/jwks.json', async (req, res) => {
   const ks = fs.readFileSync('attacker_keys.json')
   const keyStore = await jose.JWK.asKeyStore(ks.toString())
 
   res.send(keyStore.toJSON())
 })
 
-app.get('/tokens', async (req, res) => {
+app.get('/token', async (req, res) => {
   const ks = fs.readFileSync('attacker_keys.json')
   const keyStore = await jose.JWK.asKeyStore(ks.toString())
   const [key] = keyStore.all({ use: 'sig' })
@@ -38,18 +38,18 @@ app.get('/tokens', async (req, res) => {
 })
 
 app.get('/verify', validateToken, async (req, res) => {
-  res.send("atak jako localhost:5002 / admin udany")
+  res.send("Token valid")
 })
 
 app.get('/admin', validateToken, async (req, res) => {
   const authHeader = req.headers["authorization"]
   const token = authHeader.split(" ")[1]
   var decoded = JSON.parse(jwt.decode(token));
-  if (decoded.user == 'admin') {
-    res.send("admin accessed")
+  if (decoded.sub== 'admin') {
+    res.send(`Successfully accessed admin endpoint`)
   }
   else {
-    res.status(403).send("not admin")
+    res.status(403).send("Access Forbidden")
   }
 
   console.log(decoded)

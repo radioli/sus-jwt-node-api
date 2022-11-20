@@ -8,28 +8,28 @@ const app = new Express();
 
 app.use(Express.json())
 
-const keyStore = jose.JWK.createKeyStore()
-keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' })
-  .then(result => {
-    fs.writeFileSync(
-      'keys.json',
-      JSON.stringify(keyStore.toJSON(true), null, '  ')
-    )
-  })
+//const keyStore = jose.JWK.createKeyStore()
+//keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' })
+ // .then(result => {
+  //  fs.writeFileSync(
+    //  'keys.json',
+   //   JSON.stringify(keyStore.toJSON(true), null, '  ')
+   // )
+ //})
 
-app.get('/jwks', async (req, res) => {
+app.get('/jwks.json', async (req, res) => {
   const ks = fs.readFileSync('keys.json')
   const keyStore = await jose.JWK.asKeyStore(ks.toString())
 
   res.send(keyStore.toJSON())
 })
 
-app.get('/tokens', async (req, res) => {
+app.get('/token', async (req, res) => {
   const ks = fs.readFileSync('keys.json')
   const keyStore = await jose.JWK.asKeyStore(ks.toString())
   const [key] = keyStore.all({ use: 'sig' })
 
-  const opt = { compact: true, jwk: key, fields: { typ: 'jwt', jku: "http://localhost:5001/jwks" } }
+  const opt = { compact: true, jwk: key, fields: { typ: 'jwt', jku: "http://localhost:5001/jwks.json" } }
   const payload = JSON.stringify({
     exp: Math.floor((Date.now() + 24 * 60 * 60 * 1000) / 1000),
     iat: Math.floor(Date.now() / 1000),
@@ -44,12 +44,26 @@ app.get('/tokens', async (req, res) => {
 })
 
 app.get('/verify', validateToken, async (req, res) => {
-  res.send("atak jako localhost:5002 / admin udany")
+  res.send("Token valid")
 
 })
 
+app.get('/admin', validateToken, async (req, res) => {
+  const authHeader = req.headers["authorization"]
+  const token = authHeader.split(" ")[1]
+  var decoded = JSON.parse(jwt.decode(token));
+  if (decoded.sub== 'admin') {
+    res.send(`Successfully accessed admin endpoint`)
+  }
+  else {
+    res.status(403).send("Access Forbidden")
+  }
+
+  console.log(decoded)
+})
 async function validateToken(req, res, next) {
-  const token = req.body.token
+  const authHeader = req.headers["authorization"]
+  const token = authHeader.split(" ")[1]
   var decoded = jwt.decode(token);
   const header = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString())
   console.log(header)

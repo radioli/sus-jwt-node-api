@@ -8,7 +8,7 @@ const app = new Express();
 
 app.use(Express.json())
 
-app.get('/jwks', async (req, res) => {
+app.get('/jwks.json', async (req, res) => {
     const ks = fs.readFileSync('attacker_keys.json')
     const keyStore = await jose.JWK.asKeyStore(ks.toString())
     
